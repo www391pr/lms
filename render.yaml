@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: laravel-sqlite-app
+    env: php
+    plan: free
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      mkdir -p /var/data
+      cp database/database.sqlite /var/data/database.sqlite
+      php artisan config:cache
+      php artisan route:cache
+      php artisan migrate --force
+    startCommand: |
+      php artisan serve --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/data/database.sqlite
+disk:
+  name: sqlite-disk
+  mountPath: /var/data
+  sizeGB: 1
