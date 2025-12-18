@@ -1,54 +1,29 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-apache
 
-WORKDIR /app
+WORKDIR /var/www/html
 
 # Install system dependencies
-RUN apk add --no-cache \
-    git \
-    unzip \
-    libpng-dev \
-    libzip-dev \
-    oniguruma-dev \
-    icu-dev \
-    sqlite \
-    sqlite-dev
+RUN apt-get update && apt-get install -y \
+    git unzip libpng-dev libzip-dev libonig-dev libicu-dev \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip intl bcmath gd
 
-# Install PHP extensions
-RUN docker-php-ext-install \
-    pdo \
-    pdo_sqlite \
-    mbstring \
-    zip \
-    intl \
-    bcmath \
-    gd
+# Enable Apache rewrite
+RUN a2enmod rewrite
+
+# Copy project files
+COPY . .
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Create Laravel project as root
-RUN composer create-project laravel/laravel .
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Create app user
-RUN addgroup -S app && adduser -S -G app app
+# Laravel permissions
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Fix permissions BEFORE switching user
-RUN chown -R app:app /app
+# Laravel storage link
+RUN php artisan storage:link || true
 
-# Switch to non-root user
-USER app
-
-EXPOSE 9000
-CMD ["php-fpm"]
-
-
-# FROM php:7.4-fpm-alpine  
-# RUN docker-php-ext-install pdo pdo_mysql sockets
-# RUN curl -sS https://getcomposer.org/installer​ | php -- \      
-#     --install-dir=/usr/local/bin --filename=composer  
-# COPY --from=composer:latest /usr/bin/composer /usr/bin/composer 
-# WORKDIR /app 
-# COPY . . 
-# RUN composer install
-# EXPOSE 9000
-# CMD ["php-fpm"]
+EXPOSE 80
+CMD ["apache2-foreground"]
