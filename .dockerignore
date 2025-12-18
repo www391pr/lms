@@ -1,11 +1,25 @@
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
-.env
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
+# Version control
+.git
+.gitignore
+
+# Node modules / frontend stuff
+node_modules
 npm-debug.log
 yarn-error.log
+vite.config.js
+vendor
+
+# Environment files (never copy .env to image)
+.env
+.env.* 
+
+# Logs, cache, sessions
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# IDE / OS files
+.idea
+.vscode
+.DS_Store
